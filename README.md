@@ -1,2 +1,2 @@
 # client
-Check it client repository
+Check-it client repository
