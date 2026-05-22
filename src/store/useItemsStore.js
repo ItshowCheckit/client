@@ -16,9 +16,12 @@ const useItemsStore = create((set) => ({
     { id: 12, name: "체육복 상의", location: "탈의실", time: "6일 전", status: "keeping", image: "https://images.unsplash.com/photo-1562183241-840b8af0721e?w=400&q=80" },
     { id: 13, name: "필통", location: "3학년 1반", time: "8일 전", status: "keeping", image: "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&q=80" },
   ],
-  setItems: (item) => set({ item: DUMMY_ITEMS }),
-  addItems: (item) => set( (prev) => {item : [...prev, item]} ),
-  // deleteItems : (item) => set({}),
+  //setItems: (item) => set({ item: DUMMY_ITEMS }),
+  // addItems: (item) => set( (prev) => {DUMMY_ITEMS : [...prev, {
+  //       id: Date.now(), 
+  //       ...newItem, 
+  //     },]} ),
+  // deleteItems : (item) => set(),
   // updateItems : (item) => set({}),
 }));
 

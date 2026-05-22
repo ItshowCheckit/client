@@ -63,16 +63,35 @@ function formatTime() {
 export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSave, onDelete }) {
   //const isNew = !item;
 
-  const [name, setName] = useState(item?.name ?? "");
-  const [location, setLocation] = useState(item?.location ?? "");
-  const [dateStr, setDateStr] = useState(item?.dateStr ?? formatDate());
-  const [timeStr, setTimeStr] = useState(item?.timeStr ?? formatTime());
-  const [status, setStatus] = useState(item?.status ?? "keeping");
-  const [imagePreview, setImagePreview] = useState(item?.image ?? null);
+  //useEffect잇어서 빈값으로줌
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [dateStr, setDateStr] = useState(formatDate());
+  const [timeStr, setTimeStr] = useState(formatTime());
+  const [status, setStatus] = useState("keeping");
+  const [imagePreview, setImagePreview] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
 
+  const { id } = useParams();
+  const { DUMMY_ITEMS } = useItemsStore();
+
+
+  const selectItem = id ? DUMMY_ITEMS.find((i) => i.id == Number(id)) : null;
+  const isNew = !selectItem;
+
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
+
+  useEffect(() => {
+    if (selectItem) {
+      setName(selectItem.name ?? "");
+      setLocation(selectItem.location ?? "");
+      setStatus(selectItem.status ?? "keeping");
+      setImagePreview(selectItem.image ?? null);
+      setDateStr(selectItem.dateStr ?? selectItem.time ?? formatDate());
+      setTimeStr(selectItem.timeStr ?? formatTime());
+    }
+  }, [selectItem]);
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -93,24 +112,6 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
   };
 
   const canSave = name.trim() && location.trim();
-
-  const { id } = useParams();
-  const { DUMMY_ITEMS } = useItemsStore();
-
-
-  const selectItem = id? DUMMY_ITEMS.find((i)=>i.id==Number(id)) : null;
-  const isNew = !selectItem;
-
-  useEffect(() => {
-    if (selectItem) {
-      setName(selectItem.name ?? "");
-      setLocation(selectItem.location ?? "");
-      setStatus(selectItem.status ?? "keeping");
-      setImagePreview(selectItem.image ?? null);
-      setDateStr(selectItem.dateStr ?? selectItem.time ?? formatDate());
-      setTimeStr(selectItem.timeStr ?? formatTime());
-    }
-  }, [selectItem]);
 
   return (
     <div style={styles.root}>
