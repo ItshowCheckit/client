@@ -1,6 +1,8 @@
 // pages/ItemDetailPage.jsx
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
+import useItemsStore from "../store/useItemsStore";
+import { useParams } from "react-router-dom";
 
 const COLORS = {
   bg: "#F0F3F8",
@@ -18,57 +20,57 @@ const COLORS = {
 // 아이콘
 const ArrowLeft = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 12H5M12 5l-7 7 7 7"/>
+    <path d="M19 12H5M12 5l-7 7 7 7" />
   </svg>
 );
 const XIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 6L6 18M6 6l12 12"/>
+    <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 );
 const BoxIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" />
   </svg>
 );
 const LocationIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
   </svg>
 );
 const ClockIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
   </svg>
 );
 const ImageUploadIcon = () => (
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={COLORS.muted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-    <polyline points="21 15 16 10 5 21"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/>
+    <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" /><line x1="12" y1="8" x2="12" y2="14" /><line x1="9" y1="11" x2="15" y2="11" />
   </svg>
 );
 
 function formatDate() {
   const d = new Date();
-  return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+  return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`;
 }
 function formatTime() {
   const d = new Date();
-  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSave, onDelete }) {
-  const isNew = !item;
+  //const isNew = !item;
 
-  const [name,         setName]         = useState(item?.name     ?? "");
-  const [location,     setLocation]     = useState(item?.location  ?? "");
-  const [dateStr,      setDateStr]      = useState(item?.dateStr   ?? formatDate());
-  const [timeStr,      setTimeStr]      = useState(item?.timeStr   ?? formatTime());
-  const [status,       setStatus]       = useState(item?.status    ?? "keeping");
-  const [imagePreview, setImagePreview] = useState(item?.image     ?? null);
-  const [mounted,      setMounted]      = useState(false);
-  const [confirmDel,   setConfirmDel]   = useState(false);
+  const [name, setName] = useState(item?.name ?? "");
+  const [location, setLocation] = useState(item?.location ?? "");
+  const [dateStr, setDateStr] = useState(item?.dateStr ?? formatDate());
+  const [timeStr, setTimeStr] = useState(item?.timeStr ?? formatTime());
+  const [status, setStatus] = useState(item?.status ?? "keeping");
+  const [imagePreview, setImagePreview] = useState(item?.image ?? null);
+  const [mounted, setMounted] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
@@ -92,6 +94,24 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
 
   const canSave = name.trim() && location.trim();
 
+  const { id } = useParams();
+  const { DUMMY_ITEMS } = useItemsStore();
+
+
+  const selectItem = id? DUMMY_ITEMS.find((i)=>i.id==Number(id)) : null;
+  const isNew = !selectItem;
+
+  useEffect(() => {
+    if (selectItem) {
+      setName(selectItem.name ?? "");
+      setLocation(selectItem.location ?? "");
+      setStatus(selectItem.status ?? "keeping");
+      setImagePreview(selectItem.image ?? null);
+      setDateStr(selectItem.dateStr ?? selectItem.time ?? formatDate());
+      setTimeStr(selectItem.timeStr ?? formatTime());
+    }
+  }, [selectItem]);
+
   return (
     <div style={styles.root}>
       <Header schoolName={schoolName} logoSrc={logoSrc} />
@@ -99,7 +119,7 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
       <main
         style={{
           ...styles.main,
-          opacity:   mounted ? 1 : 0,
+          opacity: mounted ? 1 : 0,
           transform: mounted ? "translateY(0)" : "translateY(14px)",
           transition: "opacity 0.38s ease, transform 0.38s ease",
         }}
@@ -140,7 +160,7 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
               <input
                 style={styles.input}
                 type="text"
-                placeholder=""
+                //placeholder={selectItem.name}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -168,7 +188,7 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
             {/* 상태 버튼 */}
             <div style={styles.statusRow}>
               {[
-                { key: "keeping",  label: "보관중" },
+                { key: "keeping", label: "보관중" },
                 { key: "received", label: "수령 완료" },
               ].map((s) => {
                 const active = status === s.key;
@@ -178,8 +198,8 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
                     style={{
                       ...styles.statusBtn,
                       borderColor: active ? COLORS.accent : COLORS.border,
-                      color:       active ? COLORS.accent : COLORS.muted,
-                      fontWeight:  active ? 700 : 400,
+                      color: active ? COLORS.accent : COLORS.muted,
+                      fontWeight: active ? 700 : 400,
                     }}
                     onClick={() => setStatus(s.key)}
                   >
@@ -203,7 +223,7 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
                   style={{
                     ...styles.deleteBtn,
                     background: confirmDel ? COLORS.red : "transparent",
-                    color:      confirmDel ? "#fff"     : COLORS.red,
+                    color: confirmDel ? "#fff" : COLORS.red,
                   }}
                   onClick={handleDelete}
                 >
