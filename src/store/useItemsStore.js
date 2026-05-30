@@ -17,10 +17,10 @@ const useItemsStore = create((set) => ({
     { id: 13, name: "필통", location: "3학년 1반", time: "8일 전", status: "keeping", image: "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&q=80" },
   ],
   //setItems: (item) => set({ item: DUMMY_ITEMS }),
-  // addItems: (item) => set( (prev) => {DUMMY_ITEMS : [...prev, {
-  //       id: Date.now(), 
-  //       ...newItem, 
-  //     },]} ),
+  addItems: (item) => set( (prev) => {DUMMY_ITEMS : [...prev, {
+        id: Date.now(), 
+        ...newItem, 
+      },]} ),
   // deleteItems : (item) => set(),
   // updateItems : (item) => set({}),
 }));
