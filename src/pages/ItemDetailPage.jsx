@@ -60,36 +60,38 @@ function formatTime() {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSave, onDelete }) {
+export default function ItemDetailPage({ schoolName, logoSrc, itemId, onBack, onSave, onDelete }) {
   //const isNew = !item;
-
   //useEffect잇어서 빈값으로줌
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [dateStr, setDateStr] = useState(formatDate());
   const [timeStr, setTimeStr] = useState(formatTime());
-  const [status, setStatus] = useState("keeping");
+  const [status, setStatus] = useState("stored");
   const [imagePreview, setImagePreview] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
 
+
   const { id } = useParams();
-  const { DUMMY_ITEMS } = useItemsStore();
-
-
-  const selectItem = id ? DUMMY_ITEMS.find((i) => i.id == Number(id)) : null;
-  const isNew = !selectItem;
+  const { items } = useItemsStore();
+  
+  const selectItem = (itemId && items) ? items.find((i) => String(i.item_id) === String(itemId)) 
+                      : null;  const isNew = !selectItem;
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
-
   useEffect(() => {
     if (selectItem) {
-      setName(selectItem.name ?? "");
-      setLocation(selectItem.location ?? "");
-      setStatus(selectItem.status ?? "keeping");
-      setImagePreview(selectItem.image ?? null);
-      setDateStr(selectItem.dateStr ?? selectItem.time ?? formatDate());
-      setTimeStr(selectItem.timeStr ?? formatTime());
+      setName(selectItem.item_name ?? "");
+      setLocation(selectItem.lost_location ?? "");
+      setStatus(selectItem.status ?? "stored");
+      setImagePreview(selectItem.image_url ?? null);
+
+      if (selectItem.date) {
+      const d = new Date(selectItem.date);
+      setDateStr(`${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`);
+      setTimeStr(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+      }
     }
   }, [selectItem]);
 
@@ -103,12 +105,18 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
 
   const handleSave = () => {
     if (!name.trim() || !location.trim()) return;
-    onSave?.({ name, location, dateStr, timeStr, status, image: imagePreview });
+    onSave?.({ 
+      item_id: itemId,
+      item_name: name, 
+      lost_location: location, 
+      status: status,
+      image_url: imagePreview, 
+    });
   };
 
   const handleDelete = () => {
     if (!confirmDel) { setConfirmDel(true); return; }
-    onDelete?.(item?.id);
+    onDelete?.(id || selectItem?.item_id);
   };
 
   const canSave = name.trim() && location.trim();
@@ -189,8 +197,8 @@ export default function ItemDetailPage({ schoolName, logoSrc, item, onBack, onSa
             {/* 상태 버튼 */}
             <div style={styles.statusRow}>
               {[
-                { key: "keeping", label: "보관중" },
-                { key: "received", label: "수령 완료" },
+                { key: "stored", label: "보관중" },
+                { key: "claimed", label: "수령 완료" },
               ].map((s) => {
                 const active = status === s.key;
                 return (
