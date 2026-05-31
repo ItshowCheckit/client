@@ -52,28 +52,66 @@ function LostItemListWrapper() {
 }
 
 // ── ItemDetailPage: id 없으면 신규 등록, 있으면 수정 ─────────────────
-function ItemDetailWrapper() {
-  const { school, id } = useParams();
-  const [searchParams] = useSearchParams();
-  const role           = searchParams.get("role") ?? "teacher";
-  const navigate       = useNavigate();
+  function ItemDetailWrapper() {
+    const { school, id } = useParams();
+    const [searchParams] = useSearchParams();
+    const role           = searchParams.get("role") ?? "teacher";
+    const navigate       = useNavigate();
 
-  return (
-    <ItemDetailPage
-      schoolName={decodeURIComponent(school)}
-      role={role}
-      itemId={id ?? null}           // null이면 신규 등록 모드
-      onBack={() => navigate(-1)}
-      onSave={(data) => {
-        // TODO: API 연동 후 실제 저장 처리
-        console.log("저장", data);
-        navigate(-1);
-      }}
-      onDelete={(deletedId) => {
-        // TODO: API 연동 후 실제 삭제 처리
-        console.log("삭제", deletedId);
-        navigate(`/${school}/items?role=${role}`);
-      }}
-    />
-  );
-}
+    const decodedSchool = decodeURIComponent(school);
+
+    const handleSave = async (data) => {
+      try {
+        const isNew = !data.item_id; // ID가 없으면 새로 만들고 있으면 수정
+        const url = isNew 
+          ? `http://localhost:3000/api/lost-items` // POST (생성)
+          : `http://localhost:3000/api/lost-items/${data.item_id}`;
+
+        const response = await fetch(url, {
+          method: isNew ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            school_name: decodedSchool,
+            item_name: data.item_name,
+            lost_location: data.lost_location,
+            status: data.status,
+            image_url: data.image_url
+          })
+        });
+
+        if (response.ok) {
+          alert(isNew ? "새 분실물이 등록되었습니다!" : "수정이 완료되었습니다.");
+          navigate(-1);
+        }
+      } catch (error) {
+        console.error("저장 중 에러 발생:", error);
+        alert("저장에 실패했습니다.");
+      }
+    };
+
+    // ── handleDelete : 분실물 삭제 ─────────────────
+    const handleDelete = async (deletedId) => {
+      if (!window.confirm("정말 삭제하시겠습니까?")) return;
+      try {
+        const response = await fetch(`http://localhost:3000/api/lost-items/${deletedId}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          alert("삭제되었습니다.");
+          navigate(`/${school}/items?role=${role}`);
+        }
+      } catch (error) {
+        console.error("삭제 중 에러:", error);
+      }
+    };
+    return (
+      <ItemDetailPage
+        schoolName={decodeURIComponent(school)}
+        role={role}
+        itemId={id ?? null}
+        onBack={() => navigate(-1)}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
+    );
+  }
