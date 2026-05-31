@@ -33,18 +33,6 @@ function saveRecentSchool(name) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }
 
-//더미데이터 학교 api 연동하면삭제
-const SCHOOL_DB = [
-  "미림마이스터고등학교",
-  "미림여자고등학교",
-  "동작고등학교",
-  "명덕여자고등학교",
-  "명덕고등학교",
-  "명덕외국어고등학교",
-  "강남고등학교",
-  "송파고등학교",
-];
-
 // ── 아이콘 SVG ──────────────────────────────────────────────────────────
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -80,6 +68,7 @@ export default function MainPage({ onSelectSchool }) {
 
   const navigate = useNavigate();
 
+  const [schools, setSchools] = useState([]);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [recent, setRecent] = useState([]);
@@ -99,13 +88,29 @@ export default function MainPage({ onSelectSchool }) {
     setRecent(getRecentSchools());
   }, []);
 
+  // MySQL에서 학교 데이터 불러오기
+ useEffect(() => {
+
+  fetch('http://localhost:3000/schools')
+    .then(res => res.json())
+    .then(data => {
+      // const schoolNames = data.map(school => school.school_name);
+      setSchools(data);
+    })
+    .catch(err => {
+      console.error(err);
+    });
+}, []);
+
   // 검색 자동완성
-  useEffect(() => {
-    const q = query.trim();
-    if (!q) { setSuggestions([]); return; }
-    const filtered = SCHOOL_DB.filter((s) => s.includes(q));
-    setSuggestions(filtered);
-  }, [query]);
+useEffect(() => {
+  const q = query.trim();
+
+  if (!q) { setSuggestions([]); return; }
+  const filtered = schools.filter(school => school.school_name.includes(q));
+  setSuggestions(filtered);
+
+}, [query, schools]);
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -122,17 +127,25 @@ export default function MainPage({ onSelectSchool }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleSelect = (name) => {
-    saveRecentSchool(name);
-    setRecent(getRecentSchools());
-    setQuery("");
-    setSuggestions([]);
-    setFocused(false);
-    onSelectSchool?.(name);
+ const handleSelect = (school) => {
+  console.log("school:", school);
+  const schoolName = typeof school === "string" ? school : school.school_name;
 
-    navigate(`/${name}/role`);
-  };
+  if (!schoolName) {
+    console.error("학교 이름이 없습니다.", school);
+    return;
+  }
 
+  saveRecentSchool(schoolName);
+  setRecent(getRecentSchools());
+  setQuery("");
+  setSuggestions([]);
+  setFocused(false);
+
+  onSelectSchool?.(school);
+
+  navigate(`/${encodeURIComponent(schoolName)}/role`);
+};
   const removeRecent = (e, name) => {
     e.stopPropagation();
     const next = getRecentSchools().filter((s) => s !== name);
@@ -140,7 +153,7 @@ export default function MainPage({ onSelectSchool }) {
     setRecent(next);
   };
 
-  const showDropdown = focused && suggestions.length > 0;
+  const showDropdown = focused && query.trim() && suggestions.length > 0;
 
   return (
     <div style={styles.root}>
@@ -207,7 +220,7 @@ export default function MainPage({ onSelectSchool }) {
             <ul style={styles.dropdown}>
               {suggestions.map((s, i) => (
                 <li
-                  key={s}
+                  key={s.school_id || `school-${s.school_name}-${i}`} 
                   style={{
                     ...styles.dropdownItem,
                     animationDelay: `${i * 40}ms`,
@@ -216,7 +229,7 @@ export default function MainPage({ onSelectSchool }) {
                   onClick={() => handleSelect(s)}
                 >
                   <SearchIcon />
-                  <span>{highlight(s, query)}</span>
+                  <span>{highlight(s.school_name, query)}</span>
                 </li>
               ))}
             </ul>
@@ -239,14 +252,14 @@ export default function MainPage({ onSelectSchool }) {
             <div style={styles.chipRow}>
               {recent.map((name, i) => (
                 <button
-                  key={name}
+                  key={`recent-${name}-${i}`} // prefix를 붙여 자동완성 목록의 key와 충돌을 방지합니다.
                   style={{
                     ...styles.chip,
                     animationDelay: `${i * 60}ms`,
                   }}
                   onClick={() => handleSelect(name)}
                   className="chip-btn"
-                >
+  >             
                   {name}
                   <span
                     style={styles.chipRemove}
