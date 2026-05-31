@@ -1,3 +1,4 @@
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import LostItemCard from "../components/LostItemCard";
@@ -16,28 +17,11 @@ const COLORS = {
 
 const TABS = [
   { key: "all",      label: "전체" },
-  { key: "keeping",  label: "보관중" },
-  { key: "received", label: "수령 완료" },
+  { key: "stored",  label: "보관중" },
+  { key: "claimed", label: "수령 완료" },
 ];
 
 const PAGE_SIZE = 10; // 5열 × 2행
-
-// 더미데이터 (나중에 DB 연결 후 교체)
-// const DUMMY_ITEMS = [
-//   { id: 1,  name: "갈색 지갑",             location: "3학년 3반 교탁 위", time: "1시간 전", status: "received", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&q=80" },
-//   { id: 2,  name: "나이키 검정 신발 한 짝", location: "3학년 3반 교탁 위", time: "1시간 전", status: "received", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80" },
-//   { id: 3,  name: "신용 카드",             location: "화장실 세면대 위",   time: "1일 전",   status: "received", image: "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?w=400&q=80" },
-//   { id: 4,  name: "주황색 물통",           location: "체육관",            time: "3일 전",   status: "received", image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&q=80" },
-//   { id: 5,  name: "마우스",               location: "실습실 5실",         time: "7일 전",   status: "received", image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" },
-//   { id: 6,  name: "마우스",               location: "실습실 5실",         time: "7일 전",   status: "received", image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" },
-//   { id: 7,  name: "마우스",               location: "실습실 5실",         time: "7일 전",   status: "received", image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" },
-//   { id: 8,  name: "마우스",               location: "운동장",            time: "7일 전",   status: "keeping",  image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80" },
-//   { id: 9,  name: "우산",                 location: "1학년 2반 사물함",   time: "2일 전",   status: "keeping",  image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80" },
-//   { id: 10, name: "에어팟",               location: "도서관",             time: "4일 전",   status: "keeping",  image: "https://images.unsplash.com/photo-1588423771073-b8903fead85b?w=400&q=80" },
-//   { id: 11, name: "텀블러",               location: "2학년 복도",         time: "5일 전",   status: "received", image: "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&q=80" },
-//   { id: 12, name: "체육복 상의",           location: "탈의실",            time: "6일 전",   status: "keeping",  image: "https://images.unsplash.com/photo-1562183241-840b8af0721e?w=400&q=80" },
-//   { id: 13, name: "필통",                 location: "3학년 1반",          time: "8일 전",   status: "keeping",  image: "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&q=80" },
-// ];
 
 // 아이콘 SVG
 const SearchIcon = () => (
@@ -65,6 +49,11 @@ const ChevronRight = () => (
 // role: "student" → 카드 클릭 불가, 등록 버튼 없음
 // role: "teacher" → 카드 클릭 시 수정 페이지, 등록 버튼 표시
 export default function LostItemListPage({ schoolName, logoSrc, role, onSelectItem, onAddItem }) {
+  const navigate = useNavigate();
+  const handleEdit = (item) => {
+    navigate(`/${schoolName}/items/${item.item_id}/edit?role=teacher`);
+  };
+  const { school } = useParams();
   const isTeacher = role === "teacher";
 
   const [activeTab,   setActiveTab]   = useState("all");
@@ -72,14 +61,17 @@ export default function LostItemListPage({ schoolName, logoSrc, role, onSelectIt
   const [page,        setPage]        = useState(1);
   const [mounted,     setMounted]     = useState(false);
 
-  const {DUMMY_ITEMS} = useItemsStore();
+  const { items, fetchItems } = useItemsStore();
 
+  useEffect(() => { if(school) { fetchItems(school);}}, [school, fetchItems]);
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
   useEffect(() => { setPage(1); }, [activeTab, searchQuery]);
 
-  const filtered = DUMMY_ITEMS.filter((item) => {
-    const tabMatch    = activeTab === "all" || item.status === activeTab;
-    const searchMatch = item.name.includes(searchQuery) || item.location.includes(searchQuery);
+  const filtered = items.filter((item) => {
+    const tabMatch = activeTab === "all" || item.status === activeTab;
+    const searchMatch = 
+      item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.lost_location?.toLowerCase().includes(searchQuery.toLowerCase());    
     return tabMatch && searchMatch;
   });
 
@@ -87,14 +79,14 @@ export default function LostItemListPage({ schoolName, logoSrc, role, onSelectIt
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const counts = {
-    all:      DUMMY_ITEMS.length,
-    keeping:  DUMMY_ITEMS.filter((i) => i.status === "keeping").length,
-    received: DUMMY_ITEMS.filter((i) => i.status === "received").length,
+    all: items.length,
+    stored: items.filter(i => i.status === 'stored').length,
+    claimed: items.filter(i => i.status === 'claimed').length,
   };
 
   return (
     <div style={styles.root}>
-      <Header schoolName={schoolName} logoSrc={logoSrc} />
+      <Header schoolName={school} logoSrc={logoSrc} />
 
       {/* 탭 + 검색 + 교사 전용 등록 버튼 */}
       <div style={styles.toolbar}>
@@ -152,10 +144,10 @@ export default function LostItemListPage({ schoolName, logoSrc, role, onSelectIt
           <div style={styles.grid}>
             {paginated.map((item, i) => (
               <LostItemCard
-                key={item.id}
+                key={item.item_id || i}
                 item={item}
                 isTeacher={isTeacher}
-                onClick={() => onSelectItem?.(item)}
+                onClick={() => handleEdit(item)}
                 style={{
                   opacity:    mounted ? 1 : 0,
                   transform:  mounted ? "translateY(0)" : "translateY(10px)",
