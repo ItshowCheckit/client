@@ -30,7 +30,11 @@ const EditIcon = () => (
 
 export default function LostItemCard({ item, isTeacher, onClick, style = {} }) {
   const [hovered, setHovered] = useState(false);
-
+  const formattedDate = item.date ? new Date(item.date).toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric'
+  }) : "날짜 정보 없음";
+  
   return (
     <button
       style={{
@@ -45,11 +49,11 @@ export default function LostItemCard({ item, isTeacher, onClick, style = {} }) {
     >
       {/* 이미지 */}
       <div style={styles.imgWrap}>
-        <img src={item.image} alt={item.name} style={styles.img} />
+        <img src={item.image_url || "https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&q=80"} alt={item.item_name} style={styles.img} />
 
         {/* 상태 뱃지 */}
         <span style={styles.badge}>
-          {item.status === "received" ? "수령 완료" : "보관중"}
+          {item.status === "claimed" ? "수령 완료" : "보관중"}
         </span>
 
         {/* 교사 전용: 호버 시 수정 오버레이 */}
@@ -66,9 +70,9 @@ export default function LostItemCard({ item, isTeacher, onClick, style = {} }) {
 
       {/* 카드 정보 */}
       <div style={styles.cardBody}>
-        <p style={styles.itemName}>{item.name}</p>
-        <p style={styles.meta}><LocationIcon /><span>{item.location}</span></p>
-        <p style={styles.meta}><ClockIcon /><span>{item.time}</span></p>
+        <p style={styles.itemName}>{item.item_name}</p>
+        <p style={styles.meta}><LocationIcon /><span>{item?.lost_location}</span></p>
+        <p style={styles.meta}><ClockIcon /><span>{formattedDate}</span></p>
       </div>
     </button>
   );
