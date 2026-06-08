@@ -30,7 +30,7 @@ const EditIcon = () => (
 
 export default function LostItemCard({ item, isTeacher, onClick, style = {} }) {
   const [hovered, setHovered] = useState(false);
-  const formattedDate = item.date ? new Date(item.date).toLocaleDateString('ko-KR', {
+  const formattedDate = item.created_at ? new Date(item.created_at).toLocaleDateString('ko-KR', {
     month: 'long',
     day: 'numeric'
   }) : "날짜 정보 없음";

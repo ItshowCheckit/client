@@ -87,8 +87,8 @@ export default function ItemDetailPage({ schoolName, logoSrc, itemId, onBack, on
       setStatus(selectItem.status ?? "stored");
       setImagePreview(selectItem.image_url ?? null);
 
-      if (selectItem.date) {
-      const d = new Date(selectItem.date);
+      if (selectItem.created_at) {
+      const d = new Date(selectItem.created_at);
       setDateStr(`${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`);
       setTimeStr(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
       }
