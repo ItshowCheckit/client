@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Header from "../components/Header";
 import LostItemCard from "../components/LostItemCard";
 import useItemsStore from "../store/useItemsStore";
@@ -67,22 +67,24 @@ export default function LostItemListPage({ schoolName, logoSrc, role, onSelectIt
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
   useEffect(() => { setPage(1); }, [activeTab, searchQuery]);
 
-  const filtered = items.filter((item) => {
-    const tabMatch = activeTab === "all" || item.status === activeTab;
-    const searchMatch = 
-      item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      item.lost_location?.toLowerCase().includes(searchQuery.toLowerCase());    
-    return tabMatch && searchMatch;
-  });
+  const filtered = useMemo(() => {
+    return items.filter((item) => {
+      const tabMatch = activeTab === "all" || item.status === activeTab;
+      const searchMatch = 
+        item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        item.lost_location?.toLowerCase().includes(searchQuery.toLowerCase());    
+      return tabMatch && searchMatch;
+    });
+  }, [items, activeTab, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const counts = {
+  const counts = useMemo(() => ({
     all: items.length,
     stored: items.filter(i => i.status === 'stored').length,
     claimed: items.filter(i => i.status === 'claimed').length,
-  };
+  }), [items]);
 
   return (
     <div style={styles.root}>
